@@ -7,9 +7,17 @@ require("dotenv").config();
 
 const router = require("./routers.js");
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3001", // Update with your frontend URL
+    credentials: true, // Make sure cookies are sent and received
+  })
+);
+
 app.use(express.json());
 app.use(cookieParser());
+
+console.log(process.env.VALIDMIMITYPE);
 
 app.use("/api", router);
 

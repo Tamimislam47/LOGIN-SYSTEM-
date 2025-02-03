@@ -1,5 +1,7 @@
 const jwt = require("jsonwebtoken");
-const { findByEmail } = require("../db.js");
+const { findByEmail, db, updateByEmail } = require("../db.js");
+const authToken = require("../controllers/authToken.js");
+const { options } = require("../controllers/user.js");
 
 const middleware = {
   authenticateToken: async (req, res, next) => {
@@ -35,6 +37,49 @@ const middleware = {
       }
       next();
     };
+  },
+
+  newRefreshAccessToken: async (req, res) => {
+    const incomingrefreshToken = req.cookies?.refreshToken;
+
+    if (!incomingrefreshToken) {
+      return res.status(401).json({ message: "Access Denied" });
+    }
+
+    const decode = jwt.verify(
+      incomingrefreshToken,
+      process.env.SECRETREFRESHTOKEN
+    );
+
+    if (!decode) {
+      return res.status(401).json({ message: "Access dfsdfDenied" });
+    }
+
+    const user = await findByEmail(decode.email);
+
+    if (!user.refreshToken || user.refreshToken === "NULL") {
+      return res.status(401).json({ message: "RefreshToken Expired" });
+    }
+
+    const auth = await authToken.generateJwtTokenAndRefreshToken(user);
+    res
+      .cookie("newAccessToken", auth.newAccessToken, options)
+      .cookie("newRefreshToken", auth.newRefreshToken, options)
+      .status(200)
+      .json({
+        message: "Login Successful",
+        newAccessToken: auth.newAccessToken,
+        newRefreshToken: auth.newRefreshToken,
+      });
+
+    const query = "UPDATE UserDetails SET refreshToken = ? WHERE email = ?";
+    db.query(query, [auth.newRefreshToken, decode.email], (err, result) => {
+      if (err) {
+        console.error("Error updating refresh token:", err);
+      } else {
+        console.log("Refresh token updated:", result);
+      }
+    });
   },
 };
 

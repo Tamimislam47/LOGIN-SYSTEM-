@@ -18,9 +18,15 @@ const authToken = {
         email: user.email,
         id: user.userId,
       },
-      process.env.SECRETKEYJWT,
+      process.env.SECRETREFRESHTOKEN,
       { expiresIn: process.env.REFRESHEXPIRE }
     );
+  },
+
+  generateJwtTokenAndRefreshToken: async (user) => {
+    const newAccessToken = await authToken.generateJwtToken(user);
+    const newRefreshToken = await authToken.generateRefreshToken(user);
+    return { newAccessToken, newRefreshToken };
   },
 };
 

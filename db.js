@@ -29,6 +29,16 @@ const findByEmail = async (email) => {
   });
 };
 
+const updatePasswordByEmail = async (hashedPassword, email) => {
+  const query = `UPDATE UserDetails SET password = ? WHERE email = ?`;
+  return new Promise((resolve, reject) => {
+    db.query(query, [hashedPassword, email], (err, result) => {
+      if (err) {
+        reject("Something went wrong while updating the password");
+      }
+      resolve(result);
+    });
+  });
+};
 
-
-module.exports = { db, findByEmail };
+module.exports = { db, findByEmail, updatePasswordByEmail };
